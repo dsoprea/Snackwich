@@ -77,3 +77,9 @@ The second screen, as it appears to the user (this is in color):
                                                                                 
   <Tab>/<Alt-Tab> between elements   |  <Space> selects   |  <F12> next screen  
 
+As this is just a wrapper around the basic Snack functionality for the purpose 
+of interfacing with a configuration file, and most of the values in the form 
+expressions are sent directly as arguments to Snack, you may see the full array 
+of properties for each expression by looking in the main snack.py file (in the 
+required package, mentioned above).
+
