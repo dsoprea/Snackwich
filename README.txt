@@ -57,7 +57,7 @@ screen before pressing the "Ok" button:
     {'window1': (None, 'option3'),
      'window2': ('ok', ('Input value 1', 'Input value 2', 'Input value 3'))}
     
-The second screen as it appears to the user (this is in color):
+The second screen, as it appears to the user (this is in color):
                                                                                 
      ┌────────────────────────────┤ Title 2 ├────────────────────────────┐      
      │                                                                   │      
