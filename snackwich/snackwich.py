@@ -30,12 +30,23 @@ class Snackwich(object):
                               (config_filepath))
             raise
 
+        local_scope = { }
+
         try:
-            config = eval(raw_data, { '__builtins__': __builtins__ }, { })
+            compiled = compile(raw_data, '<string>', 'exec')
+            eval(compiled, { '__builtins__': __builtins__ }, local_scope)
         except:
             logging.exception("Could not evaluate menu config from file-path "
                               "[%s]." % (config_filepath))
             raise
+
+        if 'config' not in local_scope:
+            message = "Config must assign itself to a variable named 'config'."
+            
+            logging.error(message)
+            raise Exception(message)
+
+        config = local_scope['config']
 
         if not isinstance(config, list):
             message = "Config from file-path [%s] is expected to be a list," \
