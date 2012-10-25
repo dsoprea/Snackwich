@@ -1,0 +1,13 @@
+Metadata-Version: 1.1
+Name: snackwich
+Version: 0.1dev
+Summary: Configuration-based console UI forms.
+Home-page: https://github.com/dsoprea/Snackwich
+Author: Dustin Oprea
+Author-email: myselfasunder@gmail.com
+License: New BSD
+Description: Configuration-based Snack/Newt adaptation for easy and attractive console UI forms.
+Keywords: console ui newt snack forms
+Platform: UNKNOWN
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Environment :: Console :: Newt

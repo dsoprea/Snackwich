@@ -1,5 +1,5 @@
 
-from snackwich import Snackwich
+from snackwich.snackwich import Snackwich
 
 panels = Snackwich('example.snack.py')
 

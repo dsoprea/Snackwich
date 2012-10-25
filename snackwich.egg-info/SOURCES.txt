@@ -1,0 +1,12 @@
+README.txt
+setup.cfg
+setup.py
+snackwich/__init__.py
+snackwich/snackwich.py
+snackwich.egg-info/PKG-INFO
+snackwich.egg-info/SOURCES.txt
+snackwich.egg-info/dependency_links.txt
+snackwich.egg-info/entry_points.txt
+snackwich.egg-info/not-zip-safe
+snackwich.egg-info/requires.txt
+snackwich.egg-info/top_level.txt
