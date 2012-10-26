@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Make a source distribution. We require this as pip doesn't support egg files, 
+# and this produces a standard archive.
 python setup.py sdist
 
 if [ "$?" -ne 0 ]; then
