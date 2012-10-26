@@ -1,23 +1,27 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.1'
+version = '1.1.7'
 
 setup(name='snackwich',
       version=version,
       description="Configuration-based console UI forms.",
       long_description="Configuration-based Snack/Newt adaptation for easy and attractive console UI forms.",
-      classifiers=['Topic :: Software Development :: Libraries :: Python Modules',
+      classifiers=['Development Status :: 5 - Production/Stable',
+                   'License :: OSI Approved :: BSD License',
+                   'Natural Language :: English',
+                   'Programming Language :: Python :: 2.7',
+                   'Topic :: Software Development :: Libraries :: Python Modules',
                    'Environment :: Console :: Newt'
-                  ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+                  ],
       keywords='console ui newt snack forms',
       author='Dustin Oprea',
       author_email='myselfasunder@gmail.com',
       url='https://github.com/dsoprea/Snackwich',
       license='New BSD',
-      packages=find_packages('snackwich','example'),
+      packages=['snackwich','example'],
       include_package_data=True,
-      zip_safe=False,
+      zip_safe=True,
       install_requires=[
           'setuptools'
       ],
@@ -25,3 +29,4 @@ setup(name='snackwich',
       # -*- Entry points: -*-
       """,
       )
+
