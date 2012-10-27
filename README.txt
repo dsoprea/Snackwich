@@ -10,18 +10,47 @@ requisite dynamic library.
 
 Example (located in example/):
 
-    from snackwich import Snackwich
+    from snackwich.main import Snackwich
 
     panels = Snackwich('example.snack.py')
 
+    result = panels.execute()
+
     from pprint import pprint
-    pprint(panels.execute())
+    pprint(result)
 
 example.snack.py:
 
-    [{
-        'name': 'window1',
-        'widget': 'list',
+
+    def get_window3(key, results, context):
+
+        if 'test_val' in context:
+            if context['test_val'] == 4:
+                raise BreakSuccessionException()
+            else:
+                context['test_val'] += 1
+        else:
+            context['test_val'] = 1
+
+        # We add a "_next" meta-attribute to tell it to go to a specific panel, 
+        # next. We also add a timer_ms attribute to put a timer on the current 
+        # panel, to automatically advance it.
+
+        return { '_widget': 'list',
+                 '_next' : 'window99',
+                 'title': 'Title 3 (%d)' % (context['test_val']),
+                 'text': 'Text content',
+                 'items': [ ('Option 1', 'option1')
+                          ],
+                 'default': 0,
+                 'scroll': 0,
+                 'height': 5,
+                 'timer_ms': 1000
+               }
+
+    config = [{
+        '_name': 'window1',
+        '_widget': 'list',
         'title': 'Title 1',
         'text': 'Text content',
         'items': [ ('Option 1', 'option1'),
@@ -39,8 +68,8 @@ example.snack.py:
         'height': 5
     },
     {
-        'name': 'window2',
-        'widget': 'entry',
+        '_name': 'window2',
+        '_widget': 'entry',
         'title': 'Title 2',
         'text': 'Text content 2',
         'prompts': [ 'Prompt 1',
@@ -48,34 +77,39 @@ example.snack.py:
                      'Prompt 3'
                    ],
         'width': 70
-    }]
+    },
+    ('window99', get_window3),
+    ]
 
 The result of the panels.execute() call, above, after I pressed ENTER all of 
 the way through the first screen, and then entered three values on the second 
 screen before pressing the "Ok" button:
 
-    {'window1': (None, 'option3'),
-     'window2': ('ok', ('Input value 1', 'Input value 2', 'Input value 3'))}
+    {'window1': [(None, 'option5')],
+     'window2': [('ok', ('', '', ''))],
+     'window99': [(None, 'option1'),
+                  (None, 'option1'),
+                  (None, 'option1'),
+                  (None, 'option1')]}
     
 The second screen, as it appears to the user (this is in color):
-                                                                                
-     ┌────────────────────────────┤ Title 2 ├────────────────────────────┐      
-     │                                                                   │      
-     │ Text content 2                                                    │      
-     │                                                                   │      
-     │                   Prompt 1 Input value 1_______                   │      
-     │                   Prompt 2 Input value 2_______                   │      
-     │                   Prompt 3 Input value 3_______                   │      
-     │                                                                   │      
-     │             ┌────┐                        ┌────────┐              │      
-     │             │ Ok │                        │ Cancel │              │      
-     │             └────┘                        └────────┘              │      
-     │                                                                   │      
-     │                                                                   │      
-     └───────────────────────────────────────────────────────────────────┘      
-                                                                                
-                                                                                
-  <Tab>/<Alt-Tab> between elements   |  <Space> selects   |  <F12> next screen  
+                                                                                               
+     ┌────────────────────────────┤ Title 2 ├────────────────────────────┐             
+     │                                                                   │             
+     │ Text content 2                                                    │             
+     │                                                                   │             
+     │                   Prompt 1 ____________________                   │             
+     │                   Prompt 2 ____________________                   │             
+     │                   Prompt 3 ____________________                   │             
+     │                                                                   │             
+     │             ┌────┐                        ┌────────┐              │             
+     │             │ Ok │                        │ Cancel │              │             
+     │             └────┘                        └────────┘              │             
+     │                                                                   │             
+     │                                                                   │             
+     └───────────────────────────────────────────────────────────────────┘             
+                                                                                               
+  <Tab>/<Alt-Tab> between elements   |  <Space> selects   |  <F12> next screen                 
 
 As this is just a wrapper around the basic Snack functionality for the purpose 
 of interfacing with a configuration file, and most of the values in the form 
