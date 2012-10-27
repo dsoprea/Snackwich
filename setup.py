@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '1.1.7'
+version = '1.1.9'
 
 setup(name='snackwich',
       version=version,

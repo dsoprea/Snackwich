@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from snackwich.snackwich import Snackwich
+from snackwich.main import Snackwich
 
 panels = Snackwich('example.snack.py')
 
