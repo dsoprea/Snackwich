@@ -48,6 +48,7 @@ example.snack.py:
                  'timer_ms': 1000
                }
 
+    # Required in order to Snackwich to find the actual configuration.
     config = [{
         '_name': 'window1',
         '_widget': 'list',
