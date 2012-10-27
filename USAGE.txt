@@ -1,0 +1,63 @@
+
+This purpose of Snackwich is to provide a simple, configuration-based frontend. 
+Therefore, the coding component is simple. For example, the following executes
+and collects the results from the sample menu:
+
+    from snackwich.main import Snackwich
+
+    panels = Snackwich('example.snack.py')
+
+    result = panels.execute()
+
+The examples should provide a working example of most of what is required by
+the user. Keep in mind the following, as you're working with Snackwich.
+
+> This is an extension of traditional Snack. Instead of directly executing 
+  Python code to invoke Snack, a configuration is given that essentially
+  identifies the functions (widgets) to be created, and the arguments to use.
+
+> Arguments with a "_" prefix will not be sent to Snack. These arguments are
+  "meta-attributes" processed by Snackwich.
+  
+> You may look in snack.py or the source for _snack.so to investigate the 
+  mechanics of how things work. There is very limited documentation for the
+  project, most being simply the examples that acccompany it.
+
+> The configuration file is a list of "expressions" (also referred to "panels" 
+  in the Snackwich code). The configuration file can be any Python code, so 
+  long as a list of expressions is assigned to a variable named "config".
+  
+> The simplest use case is to provide a configuration that is simply a list of 
+  expressions, where each expression is a dictionary, and all expressions are 
+  used to render panels in the order that they appear. All expressions must 
+  have a "_name" component describing an arbitrary name to be assigned to that 
+  expression/panel for routing purposes.
+
+> We have provided a number of modifications in order to do our best to meet
+  most needs of a menu system.  
+
+  > Instead of a dictionary, an expression can be a tuple, where the first item 
+    is the name, and the second is a callback. The callback receives 
+    
+        (key, results, context)
+
+        key: Name of panel defined alongside callback (the first item of the 
+                                                       tuple)
+        results: Current set of results for previously presented panels.
+        context: Arbitrary variables set in previous callbacks. Allows the 
+                 callbacks to retain state, if necessary.
+
+    The callback should return a dictionary identical to what would have been 
+    provided if a callback had not been used.
+    
+  > A callback may raise GotoPanelException to immediately go to another panel.
+  > A callback may raise BreakSuccessionException to exit the menu system and 
+    return the collected results.
+  > A "timer_ms" attribute may be set on widgets to automatically return from
+    a panel after a certain amount of time.
+  > A "_next" attribute may be set on widgets to set the next panel that will
+    be displayed.
+    
+  By using the the "timer_ms" and "_next" attributes along with the context
+  dictionary, you can show progress.
+
