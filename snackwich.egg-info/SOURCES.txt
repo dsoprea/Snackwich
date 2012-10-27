@@ -6,8 +6,9 @@ example/example.py
 example/example.snack.py
 snackwich/__init__.py
 snackwich/exceptions.py
+snackwich/log_config.py
+snackwich/main.py
 snackwich/patch.py
-snackwich/snackwich.py
 snackwich.egg-info/PKG-INFO
 snackwich.egg-info/SOURCES.txt
 snackwich.egg-info/dependency_links.txt
