@@ -19,9 +19,9 @@ setup(name='snackwich',
       author_email='myselfasunder@gmail.com',
       url='https://github.com/dsoprea/Snackwich',
       license='New BSD',
-      packages=['snackwich','example'],
+      packages=['snackwich'],
       include_package_data=True,
-      zip_safe=True,
+      zip_safe=False,
       install_requires=[
           'setuptools'
       ],
