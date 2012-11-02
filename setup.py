@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '1.1.9'
+version = '1.1.10'
 
 setup(name='snackwich',
       version=version,
       description="Configuration-based console UI forms.",
       long_description="Configuration-based Snack/Newt adaptation for easy and attractive console UI forms.",
-      classifiers=['Development Status :: 5 - Production/Stable',
+      classifiers=['Development Status :: 3 - Alpha',
                    'License :: OSI Approved :: BSD License',
                    'Natural Language :: English',
                    'Programming Language :: Python :: 2.7',
