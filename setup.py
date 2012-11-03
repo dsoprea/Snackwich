@@ -1,7 +1,22 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '1.1.10'
+def pre_install():
+    print("Verifying Snack availability.")
+
+    try:
+        import snack
+    except:
+        print("Could not find snack. Please install the Newt or Snack "
+              "packages before installing Snackwich.")
+        return False
+
+    return True
+
+if not pre_install():
+    sys.exit(1)
+
+version = '1.1.11'
 
 setup(name='snackwich',
       version=version,
