@@ -1,5 +1,4 @@
 README.txt
-setup.cfg
 setup.py
 snackwich/__init__.py
 snackwich/exceptions.py
