@@ -11,3 +11,10 @@ class GotoPanelException(Exception):
 
 class BreakSuccessionException(Exception):
     pass
+
+class QuitException(Exception):
+    pass
+
+class RedrawException(Exception):
+    pass
+

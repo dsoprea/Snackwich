@@ -2,6 +2,7 @@ import logging
 
 from getpass import getuser
 from os import environ
+from os.path import dirname, exists
 
 import snackwich
 app_path = dirname(snackwich.__file__)

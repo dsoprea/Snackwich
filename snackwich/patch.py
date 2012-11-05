@@ -5,11 +5,10 @@ import types
 from snack import ButtonBar, TextboxReflowed, Listbox, GridFormHelp, Grid, \
                   Entry, Label
 
-def ListboxChoiceWindow(screen, title, text, items, 
-            buttons = ('Ok', 'Cancel'), 
-            width = 40, scroll = 0, height = -1, default = None,
-            help = None, timer_ms = 0, secondary_message = None, 
-            secondary_message_width = None):
+def ListboxChoiceWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'), 
+                        width=40, scroll=0, height=-1, default=None, help=None, 
+                        timer_ms=None, secondary_message=None, 
+                        secondary_message_width=None):
     """
     - ListboxChoiceWindow(screen, title, text, items, 
             buttons = ('Ok', 'Cancel'), 
@@ -17,7 +16,9 @@ def ListboxChoiceWindow(screen, title, text, items,
             help = None):
     """
     
-    # Dustin: Added timer_ms parameter.
+    # Dustin: Added timer_ms parameter. Added secondary_message arguments. 
+    #         Added result boolean for whether ESC was pressed. Results are now
+    #         dictionaries.
     
     if (height == -1): height = len(items)
 
@@ -70,19 +71,21 @@ def ListboxChoiceWindow(screen, title, text, items,
 
     rc = g.runOnce()
 
-    return (bb.buttonPressed(rc), l.current())
+    return {'button': bb.buttonPressed(rc), 'is_esc': (rc == 'ESC'), 
+            'selected': l.current()}
 
-def ButtonChoiceWindow(screen, title, text, 
-               buttons = [ 'Ok', 'Cancel' ], 
-               width = 40, x = None, y = None, help = None, timer_ms = 0, 
-               secondary_message = None, secondary_message_width = None):
+def ButtonChoiceWindow(screen, title, text, buttons=['Ok', 'Cancel'], width=40, 
+                       x=None, y=None, help=None, timer_ms=None, 
+                       secondary_message=None, secondary_message_width=None):
     """
      - ButtonChoiceWindow(screen, title, text, 
                buttons = [ 'Ok', 'Cancel' ], 
                width = 40, x = None, y = None, help = None):
     """
 
-    # Dustin: Added timer_ms parameter.
+    # Dustin: Added timer_ms parameter. Added secondary_message arguments. 
+    #         Added result boolean for whether ESC was pressed. Results are now
+    #         dictionaries.
 
     bb = ButtonBar(screen, buttons)
     t = TextboxReflowed(width, text, maxHeight = screen.height - 12)
@@ -109,16 +112,20 @@ def ButtonChoiceWindow(screen, title, text,
     if timer_ms:
         g.form.w.settimer(timer_ms)
 
-    return bb.buttonPressed(g.runOnce(x, y))
+    rc = g.runOnce(x, y)
 
-def EntryWindow(screen, title, text, prompts, allowCancel = 1, width = 40,
-        entryWidth = 20, buttons = [ 'Ok', 'Cancel' ], help = None, 
-        timer_ms = 0, anchorLeft = 0, anchorRight = 1, 
-        secondary_message = None, secondary_message_width = None):
+    return {'button': bb.buttonPressed(rc), 'is_esc': (rc == 'ESC')}
 
-    # Dustin: Added timer_ms parameter. Added anchorLeft and anchorRight as
-    # arguments to this function. Added secondary_message (test below primary 
-    # text).
+def EntryWindow(screen, title, text, prompts, allowCancel=1, width=40,
+                entryWidth=20, buttons=[ 'Ok', 'Cancel' ], help=None, 
+                timer_ms=None, anchorLeft=0, anchorRight=1, 
+                secondary_message=None, secondary_message_width=None):
+
+    # Dustin: Added timer_ms parameter. Added secondary_message arguments. 
+    #         Added result boolean for whether ESC was pressed. Added 
+    #         anchorLeft and anchorRight as arguments to this function. Added 
+    #         secondary_message (test below primary text). Results are now
+    #         dictionaries.
 
     bb = ButtonBar(screen, buttons);
     t = TextboxReflowed(width, text)
@@ -178,6 +185,8 @@ def EntryWindow(screen, title, text, prompts, allowCancel = 1, width = 40,
         entryValues.append(entryList[count].value())
         count = count + 1
 
-    return (bb.buttonPressed(result), tuple(entryValues))
+    return {'button': bb.buttonPressed(result), 'is_esc': (rc == 'ESC'), 
+            'entries': tuple(entryValues)
+           }
 
 

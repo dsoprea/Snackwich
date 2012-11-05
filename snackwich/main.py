@@ -6,15 +6,14 @@ from snack import SnackScreen
 
 from snackwich.patch import ListboxChoiceWindow, ButtonChoiceWindow, \
                             EntryWindow
-from snackwich.exceptions import GotoPanelException, BreakSuccessionException
-from snackwich.ui_functions import ProgressWindow
+from snackwich.ui_functions import ProgressWindow, MessageWindow
+from snackwich.exceptions import GotoPanelException, \
+                                 BreakSuccessionException, \
+                                 QuitException, \
+                                 RedrawException
 
 class Snackwich(object):
     config = None
-
-    # A holder of arbitrary data that will be passed from callback to callback, 
-    # if there are any.
-    cb_context = { }
 
     # Which panels follows which (dictionary).
     succession = None
@@ -22,6 +21,11 @@ class Snackwich(object):
     # The first panel.
     first_key = None
 
+    # Will describe the key of the panel following the current one.
+    next_key = None
+
+    # A forward and reverse mapping of expression keys and the expressions' 
+    # indexes within the succession.
     keys = None
     keys_r = None
 
@@ -30,10 +34,11 @@ class Snackwich(object):
     aliases = { 'list':     ListboxChoiceWindow,
                 'choice':   ButtonChoiceWindow,
                 'entry':    EntryWindow,
-                'progress': ProgressWindow
+                'progress': ProgressWindow,
+                'message':  MessageWindow,
               }
 
-    def __init__(self, config_filepath, forced_succession=None, 
+    def __init__(self, config, forced_succession=None, 
                  forced_first_key=None, config_overlap=None):
         """
         config_filepath: Panel configuration file-path.
@@ -50,7 +55,15 @@ class Snackwich(object):
         self.succession = forced_succession
         self.first_key = forced_first_key
     
-        self.__read_config(config_filepath)
+        if config.__class__ != list:
+            message = "Config from file-path [%s] is expected to be a list," \
+                      "not [%s]." % (config_filepath, \
+                                     config.__class__.__name__)
+
+            logging.error(message)
+            raise TypeError(message)
+
+        self.config = config
 
         logging.info("Mapping panel succession.")
 
@@ -74,53 +87,6 @@ class Snackwich(object):
                 
                     current_expression = self.config[self.keys_r[key]]
                     current_expression[expression_key] = expression_value
-
-    def __read_config(self, config_filepath):
-        """Read and parse the given config file."""
-    
-        logging.info("Reading config from [%s]." % (config_filepath))
-    
-        try:
-            with file(config_filepath) as f:
-                raw_data = f.read()
-        except:
-            logging.exception("Could not read menu file-path [%s]." % 
-                              (config_filepath))
-            raise
-
-        try:
-            compiled = compile(raw_data, '<string>', 'exec')
-            global_context = { '__builtins__': 
-                                    __builtins__, 
-                               'GotoPanelException': 
-                                    GotoPanelException, 
-                               'BreakSuccessionException': 
-                                    BreakSuccessionException 
-                             }
-
-            eval(compiled, global_context, self.cb_context)
-        except:
-            logging.exception("Could not evaluate menu config from file-path "
-                              "[%s]." % (config_filepath))
-            raise
-
-        if 'config' not in self.cb_context:
-            message = "Config must assign itself to a variable named 'config'."
-            
-            logging.error(message)
-            raise Exception(message)
-
-        config = self.cb_context['config']
-
-        if not isinstance(config, list):
-            message = "Config from file-path [%s] is expected to be a list," \
-                      "not [%s]." % (config_filepath, \
-                                     config.__class__.__name__)
-
-            logging.error(message)
-            raise TypeError(message)
-
-        self.config = config
 
     def __process_stanza(self, screen, key, expression, meta_attributes):
         """Process a single expression (form) from the config."""
@@ -241,7 +207,9 @@ class Snackwich(object):
         return meta_attributes
 
     def execute(self):
-        """Render each successive screen."""
+        """Display the panels. This resembles a state-machine, except that the 
+        transitions can be determined on the fly.
+        """
 
         results = { }
 
@@ -256,6 +224,7 @@ class Snackwich(object):
             # reroute if told to.
         
             key = self.first_key
+            quit = False
             while 1:
                 logging.info("Processing panel expression with key [%s]." % 
                              (key))
@@ -273,8 +242,13 @@ class Snackwich(object):
                     (key, expression_call) = expression
 
                     try:
-                        expression = expression_call(key, results, \
-                                                     self.cb_context)
+                        expression = expression_call(self, key, results)
+                    except QuitException as e:
+                        logging.info("Post-callback for key [%s] has "
+                                     "requested emergency exit." % (key))
+                        
+                        quit = True
+                        break
                     except GotoPanelException as e:
                         # Go to a different panel.
                     
@@ -326,14 +300,32 @@ class Snackwich(object):
                                       (key))
                     raise
 
+                # Determine the panel to succeed this one. We do this early to 
+                # allow callback to adjust this.
+
+                if 'next' in meta_attributes:
+                    next_key = meta_attributes['next']
+                    
+                    if key not in self.keys_r:
+                        logging.error("Key [%s] set as next from panel with "
+                                      "key [%s] does not refer to a valid "
+                                      "panel." % (key))
+                    
+                    self.next_key = next_key
+                else:
+                    if key in self.succession:
+                        self.next_key = self.succession[key]
+                    else:
+                        self.next_key = None
+
                 logging.info("Processing expression with key [%s]." % (key))
 
                 try:                
                     result = self.__process_stanza(screen, key, expression, 
                                                    meta_attributes)
-
-                    if 'post_callback' in meta_attributes:
-                        callback = meta_attributes['post_callback']
+# TODO: Move this to a separate call.
+                    if 'post_cb' in meta_attributes:
+                        callback = meta_attributes['post_cb']
                     
                         if not callable(callback):
                             message = ("Callback for key [%s] is not "
@@ -343,17 +335,71 @@ class Snackwich(object):
                             raise Exception(message)
 
                         try:
-                            result = callback(key, result, expression)
+                            result_temp = callback(self, key, result, 
+                                                   expression)
+                            
+                            # Allow them to adjust the result, but don't 
+                            # require it to be returned.
+                            if result_temp:
+                                result = result_temp
+
+                        except GotoPanelException as e:
+                            # Go to a different panel.
+                        
+                            new_key = e.key
+                            
+                            logging.info("We were routed from panel with key "
+                                         "[%s] to panel with key [%s] while in"
+                                         " post callback." % (key, new_key))
+                            
+                            if key not in self.keys_r:
+                                message = "We were told to go to panel with " \
+                                          "invalid key [%s] while in post-" \
+                                          "callback for panel with key " \
+                                          "[%s]." % (new_key, key)
+                                
+                                logging.error(message)
+                                raise Exception(message)
+                            
+                            key = new_key
+                            continue
+
+                        except RedrawException as e:
+                            logging.info("Post-callback for key [%s] has "
+                                         "requested a redraw." % (key))
+                            
+                            # Reset state values that might've been affected by 
+                            # a callback.
+                            
+                            quit = False
+                            self.next_key = None
+                            
+                            continue;
+
+                        except QuitException as e:
+                            logging.info("Post-callback for key [%s] has "
+                                         "requested emergency exit." % (key))
+                            
+                            quit = True
+                            break
+                            
                         except BreakSuccessionException as e:
                             logging.info("Post-callback for key [%s] has "
                                          "instructed us to terminate." % (key))
                             break
+
                         except:
                             logging.exception("An exception occured in the "
                                               "post-callback for key [%s]." % 
                                               (key))
                             raise
-                    
+
+                    # Static expression result handler.
+                    else:
+                        if 'is_esc' in result and result['is_esc'] or \
+                           'button' in result and result['button'] == 'cancel':
+                            break
+
                     if 'collect_results' in meta_attributes and \
                             meta_attributes['collect_results']:
                         if key in results:
@@ -368,23 +414,10 @@ class Snackwich(object):
                                       " the stanza for key [%s]." % (key))
                     raise
 
-                # Were we directed to go to a different panel than what 
-                # naturally comes next?
-                if 'next' in meta_attributes:
-                    next_key = meta_attributes['next']
-                    
-                    if key not in self.keys_r:
-                        logging.error("Key [%s] set as next from panel with "
-                                      "key [%s] does not refer to a valid "
-                                      "panel." % (key))
-                    
-                    key = next_key
+                if self.next_key:
+                    key = self.next_key
                 else:
-                    # Go to the next panel, or break if no more.
-                    if key not in self.succession:
-                        break
-
-                    key = self.succession[key]
+                    break
         except:
             logging.exception("There was an exception while processing "
                               "config stanza with key [%s]." % (key))
@@ -392,5 +425,8 @@ class Snackwich(object):
         finally:
             screen.finish()
 
-        return results
+        return None if quit else results
+
+    def set_next_panel(self, key):
+        self.next_key = key
 
