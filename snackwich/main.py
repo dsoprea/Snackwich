@@ -401,9 +401,14 @@ class Snackwich(object):
 
                     # Static expression result handler.
                     else:
-                        if 'is_esc' in result and result['is_esc'] or \
-                           'button' in result and result['button'] == 'cancel':
-                            break
+                        # If there's only one button, ignore wht method they 
+                        # used to close the window.
+                        if 'buttons' in expression and \
+                                len(expression['buttons']) > 1:
+                            if 'is_esc' in result and result['is_esc'] or \
+                               'button' in result and \
+                                    result['button'] == 'cancel':
+                                break
 
                     if 'collect_results' in meta_attributes and \
                             meta_attributes['collect_results']:
