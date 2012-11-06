@@ -76,8 +76,10 @@ def ListboxChoiceWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
 
     return {'button': button, 
             'is_esc': is_esc, 
-            'selected': l.current(), 
             'grid': g,
+
+            # A hack. There's no count method.
+            'selected': l.current() if l.key2item else None,  
            }
 
 def ButtonChoiceWindow(screen, title, text, buttons=['Ok', 'Cancel'], width=40, 
