@@ -5,20 +5,23 @@ import types
 from snack import ButtonBar, TextboxReflowed, Listbox, GridFormHelp, Grid, \
                   Entry, Label
 
+from snackwich.ui_functions import RT_EXECUTEANDPOP, RT_EXECUTEONLY, \
+                                   RT_DRAWONLY, ActivateWindow
+
+
+# Added auto-pop disable: Rather than immediately popping the dialog of the 
+# stack of currently-displayed panels, we allow this to be done manually, 
+# later.
+
 def ListboxChoiceWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'), 
                         width=40, scroll=0, height=-1, default=None, help=None, 
                         timer_ms=None, secondary_message=None, 
-                        secondary_message_width=None):
-    """
-    - ListboxChoiceWindow(screen, title, text, items, 
-            buttons = ('Ok', 'Cancel'), 
-            width = 40, scroll = 0, height = -1, default = None,
-            help = None):
-    """
+                        secondary_message_width=None, 
+                        run_type=RT_EXECUTEANDPOP):
     
     # Dustin: Added timer_ms parameter. Added secondary_message arguments. 
     #         Added result boolean for whether ESC was pressed. Results are now
-    #         dictionaries.
+    #         dictionaries. Added auto_pop parameter.
     
     if (height == -1): height = len(items)
 
@@ -69,23 +72,22 @@ def ListboxChoiceWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
     if timer_ms:
         g.form.w.settimer(timer_ms)
 
-    rc = g.runOnce()
+    (button, is_esc) = ActivateWindow(g, run_type, bb)
 
-    return {'button': bb.buttonPressed(rc), 'is_esc': (rc == 'ESC'), 
-            'selected': l.current()}
+    return {'button': button, 
+            'is_esc': is_esc, 
+            'selected': l.current(), 
+            'grid': g,
+           }
 
 def ButtonChoiceWindow(screen, title, text, buttons=['Ok', 'Cancel'], width=40, 
                        x=None, y=None, help=None, timer_ms=None, 
-                       secondary_message=None, secondary_message_width=None):
-    """
-     - ButtonChoiceWindow(screen, title, text, 
-               buttons = [ 'Ok', 'Cancel' ], 
-               width = 40, x = None, y = None, help = None):
-    """
+                       secondary_message=None, secondary_message_width=None, 
+                       run_type=RT_EXECUTEANDPOP):
 
     # Dustin: Added timer_ms parameter. Added secondary_message arguments. 
     #         Added result boolean for whether ESC was pressed. Results are now
-    #         dictionaries.
+    #         dictionaries. Added auto_pop parameter.
 
     bb = ButtonBar(screen, buttons)
     t = TextboxReflowed(width, text, maxHeight = screen.height - 12)
@@ -112,20 +114,24 @@ def ButtonChoiceWindow(screen, title, text, buttons=['Ok', 'Cancel'], width=40,
     if timer_ms:
         g.form.w.settimer(timer_ms)
 
-    rc = g.runOnce(x, y)
+    (button, is_esc) = ActivateWindow(g, run_type, bb, x, y)
 
-    return {'button': bb.buttonPressed(rc), 'is_esc': (rc == 'ESC')}
+    return {'button': button, 
+            'is_esc': is_esc, 
+            'grid': g,
+           }
 
 def EntryWindow(screen, title, text, prompts, allowCancel=1, width=40,
                 entryWidth=20, buttons=[ 'Ok', 'Cancel' ], help=None, 
                 timer_ms=None, anchorLeft=0, anchorRight=1, 
-                secondary_message=None, secondary_message_width=None):
+                secondary_message=None, secondary_message_width=None, 
+                run_type=RT_EXECUTEANDPOP):
 
     # Dustin: Added timer_ms parameter. Added secondary_message arguments. 
     #         Added result boolean for whether ESC was pressed. Added 
     #         anchorLeft and anchorRight as arguments to this function. Added 
     #         secondary_message (test below primary text). Results are now
-    #         dictionaries.
+    #         dictionaries. Added auto_pop parameter.
 
     bb = ButtonBar(screen, buttons);
     t = TextboxReflowed(width, text)
@@ -177,7 +183,7 @@ def EntryWindow(screen, title, text, prompts, allowCancel=1, width=40,
     if timer_ms:
         g.form.w.settimer(timer_ms)
 
-    result = g.runOnce()
+    (button, is_esc) = ActivateWindow(g, run_type, bb)
 
     entryValues = []
     count = 0
@@ -185,8 +191,9 @@ def EntryWindow(screen, title, text, prompts, allowCancel=1, width=40,
         entryValues.append(entryList[count].value())
         count = count + 1
 
-    return {'button': bb.buttonPressed(result), 'is_esc': (rc == 'ESC'), 
-            'entries': tuple(entryValues)
+    return {'button': button, 
+            'is_esc': is_esc, 
+            'entries': tuple(entryValues), 
+            'grid': g,
            }
-
 

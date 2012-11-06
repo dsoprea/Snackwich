@@ -116,11 +116,15 @@ class Snackwich(object):
         # Create the widget.
         
         try:
-            return widget(screen=screen, **expression)
+            result = widget(screen=screen, **expression)
         except:
             logging.exception("Could not manufacture widget [%s] under key "
                               "[%s]." % (widget.__class__.__name__, key))
             raise
+
+        screen.refresh()
+
+        return result
 
     def __get_current_key(self, expression):
         """For a given expression, validate the structure and return the key.
@@ -242,7 +246,8 @@ class Snackwich(object):
                     (key, expression_call) = expression
 
                     try:
-                        expression = expression_call(self, key, results)
+                        expression = expression_call(self, key, results, 
+                                                     screen)
                     except QuitException as e:
                         logging.info("Post-callback for key [%s] has "
                                      "requested emergency exit." % (key))
@@ -336,7 +341,7 @@ class Snackwich(object):
 
                         try:
                             result_temp = callback(self, key, result, 
-                                                   expression)
+                                                   expression, screen)
                             
                             # Allow them to adjust the result, but don't 
                             # require it to be returned.

@@ -2,8 +2,19 @@
 
 from snack import ButtonBar, TextboxReflowed, Listbox, GridFormHelp, Scale
 
+# Show the dialog, wait for input or timeout, pop, and redraw screen.
+RT_EXECUTEANDPOP = 1
+
+# Show the dialog, wait for input or timeout. The dialog must be popped off the 
+# screen and redrawn manually.
+RT_EXECUTEONLY   = 2
+
+# Show the dialog. The dialog must be popped off the screen and redrawn 
+# manually.
+RT_DRAWONLY      = 3
+
 def ProgressWindow(screen, title, text, progress, max_progress=100, width=40, 
-                   help=None, timer_ms=None):
+                   help=None, timer_ms=None, run_type=RT_EXECUTEANDPOP):
     """
     Render a panel with a progress bar and a "Cancel" button.
     """
@@ -24,13 +35,16 @@ def ProgressWindow(screen, title, text, progress, max_progress=100, width=40,
     if timer_ms:
         g.form.w.settimer(timer_ms)
 
-    rc = g.runOnce()
+    (button, is_esc) = ActivateWindow(g, run_type)
 
-    return {'button': bb.buttonPressed(rc), 'is_esc': (rc == 'ESC'), 
-            'progress': progress
+    return {'button': button, 
+            'is_esc': is_esc, 
+            'progress': progress, 
+            'grid': g,
            }
 
-def MessageWindow(screen, title, text, width=40, help=None, timer_ms=None):
+def MessageWindow(screen, title, text, width=40, help=None, timer_ms=None, 
+                  run_type=RT_EXECUTEANDPOP):
     """
     Render a panel with a message and no buttons. This is intended to
     proceed to the next panel, where some action is taken before 
@@ -46,7 +60,33 @@ def MessageWindow(screen, title, text, width=40, help=None, timer_ms=None):
     if timer_ms:
         g.form.w.settimer(timer_ms)
 
-    rc = g.runOnce()
+    (button, is_esc) = ActivateWindow(g, run_type)
 
-    return {'is_esc': (rc == 'ESC')}
+    return {'is_esc': is_esc, 
+            'grid': g,
+           }
+
+def ActivateWindow(g, run_type, button_bar=None, x=None, y=None):
+    global RT_EXECUTEANDPOP, RT_EXECUTEONLY, RT_DRAWONLY
+
+    if run_type == RT_DRAWONLY:
+        g.draw()
+        
+        button = None
+        is_esc = False
+        
+    else:
+        if run_type == RT_EXECUTEANDPOP:
+            rc = g.runOnce(x, y) 
+        
+        elif run_type == RT_EXECUTEONLY:
+            rc = g.run(x, y)
+
+        button = button_bar.buttonPressed(rc) if button_bar else None
+        is_esc = (rc == 'ESC')
+        
+    return (button, is_esc)
+
+def ManualPop(screen, refresh=True):
+    screen.popWindow(refresh)
 
