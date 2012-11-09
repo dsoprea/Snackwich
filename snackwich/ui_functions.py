@@ -14,7 +14,7 @@ RT_EXECUTEONLY   = 2
 RT_DRAWONLY      = 3
 
 def ProgressWindow(screen, title, text, progress, max_progress=100, width=40, 
-                   help=None, timer_ms=None, run_type=RT_EXECUTEANDPOP):
+                   help=None, timer_ms=None, show_cancel=False, run_type=RT_EXECUTEANDPOP):
     """
     Render a panel with a progress bar and a "Cancel" button.
     """
@@ -24,18 +24,22 @@ def ProgressWindow(screen, title, text, progress, max_progress=100, width=40,
     scale = Scale(scale_width, max_progress)
     scale.set(progress)
     
-    bb = ButtonBar(screen, ['Cancel'])
-    t = TextboxReflowed(width, text)
-
     g = GridFormHelp(screen, title, help, 1, 3)
+
+    t = TextboxReflowed(width, text)
     g.add(t, 0, 0)
+
     g.add(scale, 0, 1, padding = (0, 1, 0, 1))
-    g.add(bb, 0, 2, growx = 1)
+
+    if show_cancel:
+        bb = ButtonBar(screen, ['Cancel'])
+        g.add(bb, 0, 2, growx = 1)
 
     if timer_ms:
         g.form.w.settimer(timer_ms)
 
-    (button, is_esc) = ActivateWindow(g, run_type)
+    (button, is_esc) = ActivateWindow(g, run_type, \
+                                      button_bar=bb if show_cancel else None)
 
     return {'button': button, 
             'is_esc': is_esc, 
