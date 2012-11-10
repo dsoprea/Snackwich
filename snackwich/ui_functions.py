@@ -18,6 +18,10 @@ def ProgressWindow(screen, title, text, progress, max_progress=100, width=40,
     """
     Render a panel with a progress bar and a "Cancel" button.
     """
+
+    if progress > max_progress:
+        raise OverflowError("Progress (%d) has exceeded max (%d)." % 
+                            (progress, max_progress))
     
     scale_proportion = .80
     scale_width = int(width * scale_proportion)
