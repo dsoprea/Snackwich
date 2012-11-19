@@ -210,6 +210,70 @@ class Snackwich(object):
 
         return meta_attributes
 
+    def __process_expression(self, expression, results, screen):
+
+        # Allow there to be a function call or lambda that must be 
+        # called to render the actual expression. This call will 
+        # receive the past results as well as the current key. This 
+        # will allow the current form to feed from previous forms.
+        if isinstance(expression, tuple):
+            # The expression is a tuple with the key and a callback.
+        
+            (key, expression_call) = expression
+
+            try:
+                expression = expression_call(self, key, results, 
+                                             screen)
+            except QuitException as e:
+                logging.info("Post-callback for key [%s] has "
+                             "requested emergency exit." % (key))
+                
+                return ('break', key, expression, True)
+            except GotoPanelException as e:
+                # Go to a different panel.
+            
+                new_key = e.key
+                
+                logging.info("We were routed from panel with key [%s] "
+                             "to panel with key [%s]." % (key, 
+                                                          new_key))
+                
+                if key not in self.keys_r:
+                    message = "We were told to go to panel with " \
+                              "invalid key [%s] while processing " \
+                              "panel with key [%s]." % (new_key, key)
+                    
+                    logging.error(message)
+                    raise Exception(message)
+                
+                key = new_key
+                return ('continue', key, expression, False)
+            except BreakSuccessionException as e:
+                # Break out of the menu.
+            
+                logging.info("We were told to stop presenting panels "
+                             "while processing panel with key [%s]." % 
+                             (key))
+                return ('break', key, expression, False)
+            except:
+                logging.exception("Callable expression for key [%s] " 
+                                  "threw an exception." % (key))
+                raise
+
+            if not isinstance(expression, dict):
+                message = "Effective expression for key [%s] is not " \
+                          "a dictionary." % (key)
+                
+                logging.exception(message)
+                raise TypeError(message)
+        else:
+            # The expression is a static dictionary.
+
+            key = expression['_name']
+            del expression['_name']
+
+        return (None, key, expression, False)
+
     def execute(self):
         """Display the panels. This resembles a state-machine, except that the 
         transitions can be determined on the fly.
@@ -236,66 +300,16 @@ class Snackwich(object):
                 index = self.keys_r[key]
                 expression = copy.deepcopy(self.config[index])
 
-                # Allow there to be a function call or lambda that must be 
-                # called to render the actual expression. This call will 
-                # receive the past results as well as the current key. This 
-                # will allow the current form to feed from previous forms.
-                if isinstance(expression, tuple):
-                    # The expression is a tuple with the key and a callback.
+                result = self.__process_expression(expression, results, screen)
+                (result_type, key, expression, quit_temp) = result
                 
-                    (key, expression_call) = expression
+                if quit_temp:
+                    quit = True
 
-                    try:
-                        expression = expression_call(self, key, results, 
-                                                     screen)
-                    except QuitException as e:
-                        logging.info("Post-callback for key [%s] has "
-                                     "requested emergency exit." % (key))
-                        
-                        quit = True
-                        break
-                    except GotoPanelException as e:
-                        # Go to a different panel.
-                    
-                        new_key = e.key
-                        
-                        logging.info("We were routed from panel with key [%s] "
-                                     "to panel with key [%s]." % (key, 
-                                                                  new_key))
-                        
-                        if key not in self.keys_r:
-                            message = "We were told to go to panel with " \
-                                      "invalid key [%s] while processing " \
-                                      "panel with key [%s]." % (new_key, key)
-                            
-                            logging.error(message)
-                            raise Exception(message)
-                        
-                        key = new_key
-                        continue
-                    except BreakSuccessionException as e:
-                        # Break out of the menu.
-                    
-                        logging.info("We were told to stop presenting panels "
-                                     "while processing panel with key [%s]." % 
-                                     (key))
-                        break
-                    except:
-                        logging.exception("Callable expression for key [%s] " 
-                                          "threw an exception." % (key))
-                        raise
-
-                    if not isinstance(expression, dict):
-                        message = "Effective expression for key [%s] is not " \
-                                  "a dictionary." % (key)
-                        
-                        logging.exception(message)
-                        raise TypeError(message)
-                else:
-                    # The expression is a static dictionary.
-
-                    key = expression['_name']
-                    del expression['_name']
+                if result_type == 'break':
+                    break
+                elif result_type == 'continue':
+                    continue
 
                 try:
                     meta_attributes = self.__slice_meta_attributes(expression)
