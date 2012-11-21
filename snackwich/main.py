@@ -299,7 +299,7 @@ class Snackwich(object):
 
                 index = self.keys_r[key]
                 expression = copy.deepcopy(self.config[index])
-
+# Don't reprocess the expression more than once.
                 result = self.__process_expression(expression, results, screen)
                 (result_type, key, expression, quit_temp) = result
                 
