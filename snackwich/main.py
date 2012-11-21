@@ -12,22 +12,111 @@ from snackwich.exceptions import GotoPanelException, \
                                  QuitException, \
                                  RedrawException
 
+class _PanelContainer(object):
+    __config = None
+    __keys = None
+    __keys_r = None
+
+    def __init__(self, config):
+        """
+        config: List of panel expressions.
+        """
+
+        if config.__class__ != list:
+            message = "Config must be a list."
+
+            logging.error(message)
+            raise TypeError(message)
+
+        self.__config = config
+        self.__keys = []
+        self.__keys_r = {}
+
+        logging.info("Loading panels.")
+
+        try:
+            i = 0
+            for expression in self.__config:
+                self.add(expression)
+                i += 1
+        except:
+            logging.exception("Could not load panel (%d)." % (i))
+            raise
+
+    def exists(self, key):
+    
+        return (key in self.__keys_r)
+
+    def get_index_by_key(self, key):
+
+        return self.__keys_r[key]
+
+    def get_copy_by_key(self, key):
+
+        index = self.__keys_r[key]
+        return copy.deepcopy(self.__config[index])
+
+    def remove(self, key):
+        if key not in self.__keys_r:
+            raise KeyError("Expression to be removed [%s] is not "
+                           "registered." % (key))
+
+        index = self.__keys_r[key]
+        del self.__keys[index]
+        del self.__keys_r[key]
+        del self.__config[key]
+
+    def add(self, expression):
+        try:
+            key = self.__get_current_key(expression)
+        except:
+            logging.exception("Could not render key for expression.")
+            raise
+
+        if key in self.__keys_r:
+            raise IndexError("Expression [%s] already registered." % (key))
+
+        new_index = len(self.__keys_r)
+
+        self.__keys.append(key)
+        self.__keys_r[key] = new_index
+
+    def __get_current_key(self, expression):
+        """For a given expression, validate the structure and return the key.
+        """
+    
+        if isinstance(expression, tuple):
+            if len(expression) != 2 or \
+               not isinstance(expression[0], str) or \
+               not callable(expression[1]):
+
+                message = "As a tuple, an expression must be " \
+                          "(<string>, <callable>)."
+
+                logging.error(message)
+                raise Exception(message)
+
+            (key, expression_call) = expression
+        elif not isinstance(expression, dict):
+            message = "Expression is not a callable tuple, nor is it a " \
+                      "dictionary."
+
+            logging.error(message)
+            raise Exception(message)
+        else:
+            if '_name' not in expression:
+                message = "'_name' key not found in expression."
+
+                logging.error(message)
+                raise Exception(message)
+
+            key = expression['_name']
+
+        return key
+
 class Snackwich(object):
-    config = None
-
-    # Which panels follows which (dictionary).
-    succession = None
-
-    # The first panel.
-    first_key = None
-
-    # Will describe the key of the panel following the current one.
+    panels = None
     next_key = None
-
-    # A forward and reverse mapping of expression keys and the expressions' 
-    # indexes within the succession.
-    keys = None
-    keys_r = None
 
     # Some shorthand aliases to make the config nicer. These must be FROM'd 
     # into the current scope, above.
@@ -38,55 +127,13 @@ class Snackwich(object):
                 'message':  MessageWindow,
               }
 
-    def __init__(self, config, forced_succession=None, 
-                 forced_first_key=None, config_overlap=None):
-        """
-        config_filepath: Panel configuration file-path.
-        forced_succession: An specific succession of which panels follow which 
-                           as an alternative to the automatically-calculated 
-                           one. Useful for multiple wizards comprised of a 
-                           subset of the windows having a custom order.
-        forced_first_key: A specific panel to start with instead of simply the 
-                          first one. Again, useful for wizards.
-        config_overlap: Dynamic values that will be written on top of the file-
-                        loaded values.
-        """
-
-        self.succession = forced_succession
-        self.first_key = forced_first_key
-    
-        if config.__class__ != list:
-            message = "Config from file-path [%s] is expected to be a list," \
-                      "not [%s]." % (config_filepath, \
-                                     config.__class__.__name__)
-
-            logging.error(message)
-            raise TypeError(message)
-
-        self.config = config
-
-        logging.info("Mapping panel succession.")
+    def __init__(self, config):
 
         try:
-            (self.keys, self.keys_r) = self.__check_succession()
+            self.panels = _PanelContainer(config)
         except:
-            logging.exception("Could not calculate panel succession.")
+            logging.exception("Could not build panel contaiment.")
             raise
-
-        if config_overlap:
-            for (key, expression) in config_overlap.iteritems():
-                if key not in self.keys_r:
-                    message = ("Can not overlap panel that does not already "
-                               "exist with name [%s]." % (key))
-
-                    logging.error(message)
-                    raise Exception(message)
-
-                for (expression_key, expression_value) \
-                        in expression.iteritems():
-                
-                    current_expression = self.config[self.keys_r[key]]
-                    current_expression[expression_key] = expression_value
 
     def __process_stanza(self, screen, key, expression, meta_attributes):
         """Process a single expression (form) from the config."""
@@ -125,77 +172,6 @@ class Snackwich(object):
         screen.refresh()
 
         return result
-
-    def __get_current_key(self, expression):
-        """For a given expression, validate the structure and return the key.
-        """
-    
-        if isinstance(expression, tuple):
-            if len(expression) != 2 or \
-               not isinstance(expression[0], str) or \
-               not callable(expression[1]):
-
-                message = "As a tuple, an expression must be " \
-                          "(<string>, <callable>)."
-
-                logging.error(message)
-                raise Exception(message)
-
-            (key, expression_call) = expression
-        elif not isinstance(expression, dict):
-            message = "Expression is not a callable tuple, nor is it a " \
-                      "dictionary."
-
-            logging.error(message)
-            raise Exception(message)
-        else:
-            if '_name' not in expression:
-                message = "'_name' key not found in expression."
-
-                logging.error(message)
-                raise Exception(message)
-
-            key = expression['_name']
-
-        return key
-
-    def __check_succession(self):
-        """Run through the configured panel expressions and determine which 
-        leads to which.
-        """
-
-        # Produce the succession of keys in a flat list, first (to avoid 
-        # calculating each key more than once).
-
-        i = 0
-        keys = [ ]
-        keys_r = { }
-        for expression in self.config:
-            try:
-                key = self.__get_current_key(expression)
-            except:
-                logging.exception("Could not render key for expression (%d)." % 
-                                  (i))
-                raise
-
-            keys.append(key)
-            keys_r[key] = i
-            i += 1
-
-        if not self.succession:
-            num_expressions = len(self.config)
-            succession = { }
-            i = 0
-            while i < num_expressions - 1:
-                succession[keys[i]] = keys[i + 1]
-                i += 1
-
-            self.succession = succession
-
-        if not self.first_key:
-            self.first_key = keys[0] if keys else None
-
-        return (keys, keys_r)
 
     def __slice_meta_attributes(self, dict_expression):
         meta_attributes = { }
@@ -238,7 +214,7 @@ class Snackwich(object):
                              "to panel with key [%s]." % (key, 
                                                           new_key))
                 
-                if key not in self.keys_r:
+                if not self.panels.exists(key):
                     message = "We were told to go to panel with " \
                               "invalid key [%s] while processing " \
                               "panel with key [%s]." % (new_key, key)
@@ -274,16 +250,12 @@ class Snackwich(object):
 
         return (None, key, expression, False)
 
-    def execute(self):
+    def execute(self, first_key):
         """Display the panels. This resembles a state-machine, except that the 
         transitions can be determined on the fly.
         """
 
         results = { }
-
-        # Make sure we actually had panels.
-        if not self.first_key:
-            return results;
 
         screen = SnackScreen()
 
@@ -291,14 +263,19 @@ class Snackwich(object):
             # Move through the panels in a linked-list fashion, so that we can 
             # reroute if told to.
         
-            key = self.first_key
+            key = first_key
             quit = False
             while 1:
                 logging.info("Processing panel expression with key [%s]." % 
                              (key))
 
-                index = self.keys_r[key]
-                expression = copy.deepcopy(self.config[index])
+                try:
+                    expression = self.panels.get_copy_by_key(key)
+                except:
+                    logging.exception("Could not retrieve expression [%s]." % 
+                                      (key))
+                    raise
+
 # Don't reprocess the expression more than once.
                 result = self.__process_expression(expression, results, screen)
                 (result_type, key, expression, quit_temp) = result
@@ -322,20 +299,20 @@ class Snackwich(object):
                 # Determine the panel to succeed this one. We do this early to 
                 # allow callback to adjust this.
 
-                if 'next' in meta_attributes:
-                    next_key = meta_attributes['next']
+                if 'next' not in meta_attributes:
+                    message = "No 'next' panel defined in expression."
                     
-                    if key not in self.keys_r:
-                        logging.error("Key [%s] set as next from panel with "
-                                      "key [%s] does not refer to a valid "
-                                      "panel." % (key))
-                    
-                    self.next_key = next_key
-                else:
-                    if key in self.succession:
-                        self.next_key = self.succession[key]
-                    else:
-                        self.next_key = None
+                    logging.error(message)
+                    raise Exception(message)
+                
+                next_key = meta_attributes['next']
+                
+                if not self.panels.exists(key):
+                    logging.error("Key [%s] set as next from panel with "
+                                  "key [%s] does not refer to a valid "
+                                  "panel." % (key))
+                
+                self.next_key = next_key
 
                 logging.info("Processing expression with key [%s]." % (key))
 
@@ -371,7 +348,7 @@ class Snackwich(object):
                                          "[%s] to panel with key [%s] while in"
                                          " post callback." % (key, new_key))
                             
-                            if key not in self.keys_r:
+                            if not self.panels.exists(key):
                                 message = "We were told to go to panel with " \
                                           "invalid key [%s] while in post-" \
                                           "callback for panel with key " \
