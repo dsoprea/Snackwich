@@ -115,7 +115,7 @@ class _PanelContainer(object):
         return key
 
 class Snackwich(object):
-    panels = None
+    _panels = None
     next_key = None
 
     # Some shorthand aliases to make the config nicer. These must be FROM'd 
@@ -130,7 +130,7 @@ class Snackwich(object):
     def __init__(self, config):
 
         try:
-            self.panels = _PanelContainer(config)
+            self._panels = _PanelContainer(config)
         except:
             logging.exception("Could not build panel contaiment.")
             raise
@@ -214,7 +214,7 @@ class Snackwich(object):
                              "to panel with key [%s]." % (key, 
                                                           new_key))
                 
-                if not self.panels.exists(key):
+                if not self._panels.exists(key):
                     message = "We were told to go to panel with " \
                               "invalid key [%s] while processing " \
                               "panel with key [%s]." % (new_key, key)
@@ -270,7 +270,7 @@ class Snackwich(object):
                              (key))
 
                 try:
-                    expression = self.panels.get_copy_by_key(key)
+                    expression = self._panels.get_copy_by_key(key)
                 except:
                     logging.exception("Could not retrieve expression [%s]." % 
                                       (key))
@@ -307,12 +307,12 @@ class Snackwich(object):
                 
                 next_key = meta_attributes['next']
                 
-                if not self.panels.exists(key):
+                if not self._panels.exists(key):
                     logging.error("Key [%s] set as next from panel with "
                                   "key [%s] does not refer to a valid "
                                   "panel." % (key))
                 
-                self.next_key = next_key
+                self._next_key = next_key
 
                 logging.info("Processing expression with key [%s]." % (key))
 
@@ -348,7 +348,7 @@ class Snackwich(object):
                                          "[%s] to panel with key [%s] while in"
                                          " post callback." % (key, new_key))
                             
-                            if not self.panels.exists(key):
+                            if not self._panels.exists(key):
                                 message = "We were told to go to panel with " \
                                           "invalid key [%s] while in post-" \
                                           "callback for panel with key " \
@@ -368,7 +368,7 @@ class Snackwich(object):
                             # a callback.
                             
                             quit = False
-                            self.next_key = None
+                            self._next_key = None
                             
                             continue;
 
@@ -415,8 +415,8 @@ class Snackwich(object):
                                       " the stanza for key [%s]." % (key))
                     raise
 
-                if self.next_key:
-                    key = self.next_key
+                if self._next_key:
+                    key = self._next_key
                 else:
                     break
         except:
@@ -429,5 +429,8 @@ class Snackwich(object):
         return None if quit else results
 
     def set_next_panel(self, key):
-        self.next_key = key
+        self._next_key = key
+
+    def get_container(self):
+        return self._panels
 
