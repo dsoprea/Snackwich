@@ -2,6 +2,8 @@
 import logging
 import copy
 
+from random import randint
+
 from snack import SnackScreen
 
 from snackwich.patch import ListboxChoiceWindow, ButtonChoiceWindow, \
@@ -13,9 +15,10 @@ from snackwich.exceptions import GotoPanelException, \
                                  RedrawException
 
 class _PanelContainer(object):
-    __config = None
-    __keys = None
-    __keys_r = None
+    __config  = None
+    __keys    = None
+    __keys_r  = None
+    __ns_keys = None
 
     def __init__(self, config):
         """
@@ -28,15 +31,16 @@ class _PanelContainer(object):
             logging.error(message)
             raise TypeError(message)
 
-        self.__config = config
+        self.__config = []
         self.__keys = []
         self.__keys_r = {}
+        self.__ns_keys = {}
 
         logging.info("Loading panels.")
 
         try:
             i = 0
-            for expression in self.__config:
+            for expression in config:
                 self.add(expression)
                 i += 1
         except:
@@ -56,30 +60,79 @@ class _PanelContainer(object):
         index = self.__keys_r[key]
         return copy.deepcopy(self.__config[index])
 
-    def remove(self, key):
+    def remove(self, key, ns=None):
         if key not in self.__keys_r:
             raise KeyError("Expression to be removed [%s] is not "
                            "registered." % (key))
+
+        if ns in self.__ns_keys:
+            if key not in self.__ns_keys[ns]:
+                message = ("Panel [%s] is not indexed under namespace [%s]." % 
+                           (key, ns))
+
+                logging.error(message)
+                raise KeyError(message)
+
+            del self.__ns_keys[ns][key]
+            
+            if not self.__ns_keys[ns]:
+                del self.__ns_keys[ns]
 
         index = self.__keys_r[key]
         del self.__keys[index]
         del self.__keys_r[key]
         del self.__config[key]
 
-    def add(self, expression):
+    def remove_ns(self, ns):
+
+        logging.info("Removing panels under namespace [%s]." % (ns))
+
+        try:
+            for key in self.__ns_keys[ns][:]:
+                self.remove(key, ns)
+        except:
+            logging.exception("Could not remove all items under namespace "
+                              "[%s]." % (ns))
+            raise
+        
+    def add(self, expression, ns=None, assign_random_key=False):
+
         try:
             key = self.__get_current_key(expression)
         except:
             logging.exception("Could not render key for expression.")
             raise
 
-        if key in self.__keys_r:
-            raise IndexError("Expression [%s] already registered." % (key))
+        if assign_random_key:
+            if key != None:
+                message = ("A random key can not be assigned because the key [%s] "
+                           "was already defined." % (key))
+                
+                logging.exception(message)
+                raise KeyError(message)
+
+            while 1:
+                key = ('Random_%d' % randint(11111, 99999))
+                
+                if key not in self.__keys_r:
+                    break
+
+        if not assign_random_key and key in self.__keys_r:
+            raise KeyError("Expression [%s] already registered." % (key))
 
         new_index = len(self.__keys_r)
 
+        self.__config.append(expression)
         self.__keys.append(key)
         self.__keys_r[key] = new_index
+
+        if ns != None:
+            if ns not in self.__ns_keys:
+                self.__ns_keys[ns] = []
+
+            self.__ns_keys[ns].append(key)
+
+        return key
 
     def __get_current_key(self, expression):
         """For a given expression, validate the structure and return the key.
