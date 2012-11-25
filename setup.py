@@ -3,7 +3,7 @@ import sys, os
 
 def pre_install():
     print("Verifying Snack availability.")
-
+# TODO: Check for Newt, too.
     try:
         import snack
     except:
