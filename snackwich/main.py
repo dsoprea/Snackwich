@@ -61,17 +61,20 @@ class _PanelContainer(object):
         return copy.deepcopy(self.__config[index])
 
     def remove(self, key, ns=None):
+        logging.info("Deregistering panel [%s] in namespace [%s]." % (key, ns))
+
         if key not in self.__keys_r:
             raise KeyError("Expression to be removed [%s] is not "
                            "registered." % (key))
 
-        if ns in self.__ns_keys:
+        if ns != None:
+            if ns not in self.__ns_keys:
+                raise KeyError("Namespace [%s] is not valid for removal of "
+                               "keys." % (ns))
+        
             if key not in self.__ns_keys[ns]:
-                message = ("Panel [%s] is not indexed under namespace [%s]." % 
-                           (key, ns))
-
-                logging.error(message)
-                raise KeyError(message)
+                raise KeyError("Panel [%s] is not indexed under namespace "
+                               "[%s]. Can not remove." % (key, ns))
 
             self.__ns_keys[ns].remove(key)
             
@@ -79,9 +82,19 @@ class _PanelContainer(object):
                 del self.__ns_keys[ns]
 
         index = self.__keys_r[key]
+
+        logging.debug("Removing panel [%s] with index [%d] under namespace "
+                      "[%s]." % (key, index, ns))
+
         del self.__keys[index]
         del self.__keys_r[key]
         del self.__config[index]
+
+        # Decrement the indices that we have for the panels currently having 
+        # indices higher than the one that was deleted. 
+        for other_key, other_index in self.__keys_r.items():
+            if other_index > index:
+                self.__keys_r[other_key] = other_index - 1
 
     def keys_in_ns(self, ns):
     
@@ -89,7 +102,7 @@ class _PanelContainer(object):
 
     def remove_ns(self, ns):
 
-        logging.info("Removing panels under namespace [%s]." % (ns))
+        logging.info("Deregistering panels under namespace [%s]." % (ns))
 
         keys = self.keys_in_ns(ns)
 
@@ -110,6 +123,8 @@ class _PanelContainer(object):
         except:
             logging.exception("Could not render key for expression.")
             raise
+
+        logging.info("Registering panel [%s]." % (key))
 
         if assign_random_key:
             if key != None:
@@ -360,22 +375,15 @@ class Snackwich(object):
 
                 # Determine the panel to succeed this one. We do this early to 
                 # allow callback to adjust this.
-
-                if 'next' not in meta_attributes:
-                    message = "No 'next' panel defined in expression."
-                    
-                    logging.error(message)
-                    raise Exception(message)
-                
-                next_key = meta_attributes['next']
+                self._next_key = meta_attributes['next'] \
+                            if 'next' in meta_attributes \
+                            else None
                 
                 if not self.__panels.exists(key):
                     logging.error("Key [%s] set as next from panel with "
                                   "key [%s] does not refer to a valid "
                                   "panel." % (key))
                 
-                self._next_key = next_key
-
                 logging.info("Processing expression with key [%s]." % (key))
 
                 try:                

@@ -16,7 +16,7 @@ def pre_install():
 if not pre_install():
     sys.exit(1)
 
-version = '1.3.6'
+version = '1.3.7'
 
 setup(name='snackwich',
       version=version,
