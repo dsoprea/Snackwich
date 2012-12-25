@@ -136,6 +136,8 @@ def CheckboxListWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
         g.add(t2, 0, row, padding = (0, 1, 0, 0))
         row += 1
 
+    checkboxes = []
+
     i = 0
     for item in items:
         if (type(item) == types.TupleType):
@@ -151,7 +153,10 @@ def CheckboxListWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
         if i == len(items) - 1:
             padding[3] = 1
 
-        g.add(Checkbox(text, int(state)), 0, row, padding)
+        checkbox = Checkbox(text, int(state))
+        checkboxes.append(checkbox)
+
+        g.add(checkbox, 0, row, padding)
         row += 1
         i += 1
 
@@ -163,8 +168,13 @@ def CheckboxListWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
 
     (button, is_esc) = ActivateWindow(g, run_type, bb)
 
-    return {'button': button, 
-            'is_esc': is_esc, 
-            'grid': g,
+    values = [checkbox.selected() for checkbox in checkboxes]
+
+    raise Exception(values)
+
+    return {'checkboxes': values,
+            'button':     button, 
+            'is_esc':     is_esc, 
+            'grid':       g,
            }
 
