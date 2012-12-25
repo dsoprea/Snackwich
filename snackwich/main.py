@@ -8,7 +8,8 @@ from snack import SnackScreen
 
 from snackwich.patch import ListboxChoiceWindow, ButtonChoiceWindow, \
                             EntryWindow
-from snackwich.ui_functions import ProgressWindow, MessageWindow
+from snackwich.ui_functions import ProgressWindow, MessageWindow, \
+                                   CheckboxListWindow
 from snackwich.exceptions import GotoPanelException, \
                                  BreakSuccessionException, \
                                  QuitException, \
@@ -197,11 +198,12 @@ class Snackwich(object):
 
     # Some shorthand aliases to make the config nicer. These must be FROM'd 
     # into the current scope, above.
-    aliases = { 'list':     ListboxChoiceWindow,
-                'choice':   ButtonChoiceWindow,
-                'entry':    EntryWindow,
-                'progress': ProgressWindow,
-                'message':  MessageWindow,
+    aliases = { 'list':      ListboxChoiceWindow,
+                'choice':    ButtonChoiceWindow,
+                'entry':     EntryWindow,
+                'progress':  ProgressWindow,
+                'message':   MessageWindow,
+                'checklist': CheckboxListWindow,
               }
 
     def __init__(self, config):
