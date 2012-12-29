@@ -170,8 +170,6 @@ def CheckboxListWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
 
     values = [checkbox.selected() for checkbox in checkboxes]
 
-    raise Exception(values)
-
     return {'checkboxes': values,
             'button':     button, 
             'is_esc':     is_esc, 
