@@ -106,7 +106,17 @@ def CheckboxListWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
                        timer_ms=None, secondary_message=None, 
                        secondary_message_width=None, 
                        run_type=RT_EXECUTEANDPOP,
-                       default_check_state=False):
+                       default_check_state=False,
+                       default_check_states=None):
+
+    if not default_check_states:
+        default_check_states = [default_check_state 
+                                for i 
+                                in xrange(len(items))]
+    elif len(default_check_states) != len(items):
+        raise Exception("Number (%d) of check states does not match number of "
+                        "items (%d)." % (len(default_check_states), 
+                                         len(items)))
 
     primary_message_height = 1
     button_height = 1
