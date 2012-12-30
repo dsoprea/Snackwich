@@ -13,7 +13,9 @@ from snackwich.ui_functions import ProgressWindow, MessageWindow, \
 from snackwich.exceptions import GotoPanelException, \
                                  BreakSuccessionException, \
                                  QuitException, \
-                                 RedrawException
+                                 RedrawException, \
+                                 QuitAndExecuteException, \
+                                 PostQuitAndExecuteException
 
 class _PanelContainer(object):
     __config  = None
@@ -116,6 +118,14 @@ class _PanelContainer(object):
             raise
         
         return keys
+
+    def get_random_panel_name(self, kernel='Random'):
+
+        while 1:
+            key = ('%s_%d' % (kernel, randint(11111, 99999)))
+            
+            if key not in self.__keys_r:
+                return key
         
     def add(self, expression, ns=None, assign_random_key=False):
 
@@ -135,11 +145,7 @@ class _PanelContainer(object):
                 logging.exception(message)
                 raise KeyError(message)
 
-            while 1:
-                key = ('Random_%d' % randint(11111, 99999))
-                
-                if key not in self.__keys_r:
-                    break
+            key = self.get_random_panel_name()
 
         if not assign_random_key and key in self.__keys_r:
             raise KeyError("Expression [%s] already registered." % (key))
@@ -344,7 +350,10 @@ class Snackwich(object):
         
             key = first_key
             quit = False
-            while 1:
+            loop = True
+            posthook_cb = None
+            loophook_cb = None
+            while loop:
                 logging.info("Processing panel expression with key [%s]." % 
                              (key))
 
@@ -411,6 +420,33 @@ class Snackwich(object):
                             if result_temp:
                                 result = result_temp
 
+                        except PostQuitAndExecuteException as e:
+
+                            logging.info("Post-callback for key [%s] has "
+                                         "requested an exit-and-execute." % 
+                                         (key))
+                            
+                            # We can't break the loop the same way as 
+                            # everything else, because we have a result that we 
+                            # want to have registered. So, just allow us to 
+                            # reach the end of the loop and prevent us from 
+                            # looping again.
+                            loop = False
+
+                            posthook_cb = e.posthook_cb
+                            result = e.result
+
+                        except QuitAndExecuteException as e:
+                        
+                            logging.info("Post-callback for key [%s] has "
+                                         "requested an exit-and-execute." % 
+                                         (key))
+                            
+                            quit = True
+                            posthook_cb = e.posthook_cb
+
+                            break
+
                         except GotoPanelException as e:
                             # Go to a different panel.
                         
@@ -464,7 +500,7 @@ class Snackwich(object):
 
                     # Static expression result handler.
                     else:
-                        # If there's only one button, ignore wht method they 
+                        # If there's only one button, ignore what method they 
                         # used to close the window.
                         if 'buttons' in expression and \
                                 len(expression['buttons']) > 1:
@@ -498,7 +534,13 @@ class Snackwich(object):
         finally:
             screen.finish()
 
+        if posthook_cb:
+            posthook_cb()
+
         return None if quit else self.results
+
+    def get_next_panel(self):
+        return self._next_key
 
     def set_next_panel(self, key):
         self._next_key = key
@@ -516,7 +558,7 @@ class Snackwich(object):
                     raise
 
         return results
-                
+
     def get_results(self, keys):
     
         if keys.__class__ == list:
