@@ -180,9 +180,80 @@ def CheckboxListWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
 
     values = [checkbox.selected() for checkbox in checkboxes]
 
-    return {'checkboxes': values,
-            'button':     button, 
-            'is_esc':     is_esc, 
-            'grid':       g,
+    return {'values': values,
+            'button': button, 
+            'is_esc': is_esc, 
+            'grid':   g,
            }
+
+#def RadioListWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'), 
+#                       width=40, scroll=0, default=None, help=None, 
+#                       timer_ms=None, secondary_message=None, 
+#                       secondary_message_width=None, 
+#                       run_type=RT_EXECUTEANDPOP,
+#                       default=0):
+#
+#    primary_message_height = 1
+#    button_height = 1
+#    radiolist_margin = 0
+#    
+#    rows = primary_message_height + \
+#           button_height + \
+#           (2 if secondary_message else 0) + \
+#           len(items) + \
+#           radiolist_margin
+#    
+#    bb = ButtonBar(screen, buttons)
+#    t = TextboxReflowed(width, text)
+#
+#    g = GridFormHelp(screen, title, help, 1, rows)
+#    
+#    row = 0
+#    
+#    g.add(t, 0, row)
+#    row += 1
+#
+#    if secondary_message:
+#        if not secondary_message_width:
+#            secondary_message_width = width
+#    
+#        t2 = TextboxReflowed(secondary_message_width, secondary_message)
+#        g.add(t2, 0, row, padding = (0, 1, 0, 0))
+#        row += 1
+#
+#    radios = []
+#    rg = RadioGroup()
+#
+#    i = 0
+#    for text in items:
+#        state = (i == default)
+#
+#        padding = [0, 0, 0, 0]
+#        if i == 0:
+#            padding[1] = 1
+#
+#        if i == len(items) - 1:
+#            padding[3] = 1
+#
+#        rg.add(text, int(state))
+#
+#        row += 1
+#        i += 1
+#
+#    g.add(rg, 0, row, padding)
+#    g.add(bb, 0, row, growx = 1)
+#    row += 1
+#
+#    if timer_ms:
+#        g.form.w.settimer(timer_ms)
+#
+#    (button, is_esc) = ActivateWindow(g, run_type, bb)
+#
+#    values = [checkbox.selected() for radio in radios]
+#
+#    return {'values': values,
+#            'button': button, 
+#            'is_esc': is_esc, 
+#            'grid':   g,
+#           }
 

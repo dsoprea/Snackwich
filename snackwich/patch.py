@@ -14,7 +14,7 @@ from snackwich.ui_functions import RT_EXECUTEANDPOP, RT_EXECUTEONLY, \
 # later.
 
 def ListboxChoiceWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'), 
-                        width=40, scroll=0, height=-1, default=None, help=None, 
+                        width=40, scroll=None, height=-1, default=None, help=None, 
                         timer_ms=None, secondary_message=None, 
                         secondary_message_width=None, 
                         run_type=RT_EXECUTEANDPOP):
@@ -23,7 +23,11 @@ def ListboxChoiceWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
     #         Added result boolean for whether ESC was pressed. Results are now
     #         dictionaries. Added auto_pop parameter.
     
-    if (height == -1): height = len(items)
+    if height == -1: 
+        height = len(items)
+    
+    if scroll == None:
+        scroll = len(items) > height
 
     bb = ButtonBar(screen, buttons)
     t = TextboxReflowed(width, text)
@@ -38,7 +42,7 @@ def ListboxChoiceWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
 
         if (default == count):
             default = key
-        elif (default == item):
+        elif (default == text):
             default = key
 
         l.append(text, key)
@@ -195,7 +199,7 @@ def EntryWindow(screen, title, text, prompts, allowCancel=1, width=40,
 
     return {'button': button, 
             'is_esc': is_esc, 
-            'entries': tuple(entryValues), 
-            'grid': g,
+            'values': tuple(entryValues), 
+            'grid':   g,
            }
 

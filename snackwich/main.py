@@ -9,7 +9,7 @@ from snack import SnackScreen
 from snackwich.patch import ListboxChoiceWindow, ButtonChoiceWindow, \
                             EntryWindow
 from snackwich.ui_functions import ProgressWindow, MessageWindow, \
-                                   CheckboxListWindow
+                                   CheckboxListWindow#, RadioListWindow
 from snackwich.exceptions import GotoPanelException, \
                                  BreakSuccessionException, \
                                  QuitException, \
@@ -210,6 +210,7 @@ class Snackwich(object):
                 'progress':  ProgressWindow,
                 'message':   MessageWindow,
                 'checklist': CheckboxListWindow,
+#                'radiolist': RadioListWindow,
               }
 
     def __init__(self, config):
