@@ -8,113 +8,61 @@ The only requirement is that the Snack framework is installed. Under Ubuntu,
 this is the "python-newt" package. It includes "snack.py", along with the
 requisite dynamic library.
 
-Example (located in example/):
+See the "test.py" script in the example/ directory.
 
-    from snackwich.main import Snackwich
+                    ┌─────────────┤ Title 1 ├─────────────┐                                                  
+                    │                                     │                                                  
+                    │ Text content 1                      │                                                  
+                    │                                     │                                                  
+                    │             Option 1  ↑             │                                                  
+                    │             Option 2  ▒             │                                                  
+                    │             Option 3  ▮             │                                                  
+                    │             Option 4  ▒             │                                                  
+                    │             Option 5  ↓             │                                                  
+                    │                                     │                                                  
+                    │     ┌────┐          ┌────────┐      │                                                  
+                    │     │ Ok │          │ Cancel │      │                                                  
+                    │     └────┘          └────────┘      │                                                  
+                    │                                     │                                                  
+                    │                                     │                                                  
+                    └─────────────────────────────────────┘                                                  
+                                                                                                                                           
+                                                                                                                                           
+  <Tab>/<Alt-Tab> between elements   |  <Space> selects   |  <F12> next screen                                                             
 
-    panels = Snackwich('example.snack.py')
 
-    result = panels.execute()
+Snackwich allows you to express your panels declaratively (as a static list-of-
+dictionaries), a list of tuples describing callbacks, or a combination of both.
 
-    from pprint import pprint
-    pprint(result)
+The config also allows each panel to have a posthook callback to check which 
+values/choices were made, which button was pressed, or whether ESC was used to 
+escape the panel. See the example.
 
-example.snack.py:
+Although the configuration allows you to define the succession of which
+panels lead to which, the posthook callback can raise certain exceptions to 
+jump to different panels, redraw the current panel, quit, etc.. (see 
+snackwich.exceptions).
 
+The previous two features can be combined to implement validation: check the
+values, navigate to an error panel, and navigate back (the error panel must 
+have a '_next' describing the name of the original dialog).
 
-    def get_window3(key, results, context):
+The result of the example menu is the following (the names of the panels are
+'window1', 'window2', and 'window3'):
 
-        if 'test_val' in context:
-            if context['test_val'] == 4:
-                raise BreakSuccessionException()
-            else:
-                context['test_val'] += 1
-        else:
-            context['test_val'] = 1
-
-        # We add a "_next" meta-attribute to tell it to go to a specific panel, 
-        # next. We also add a timer_ms attribute to put a timer on the current 
-        # panel, to automatically advance it.
-
-        return { '_widget': 'list',
-                 '_next' : 'window99',
-                 'title': 'Title 3 (%d)' % (context['test_val']),
-                 'text': 'Text content',
-                 'items': [ ('Option 1', 'option1')
-                          ],
-                 'default': 0,
-                 'scroll': 0,
-                 'height': 5,
-                 'timer_ms': 1000
-               }
-
-    # Required in order to Snackwich to find the actual configuration.
-    config = [{
-        '_name': 'window1',
-        '_widget': 'list',
-        'title': 'Title 1',
-        'text': 'Text content',
-        'items': [ ('Option 1', 'option1'),
-                   ('Option 2', 'option2'),
-                   ('Option 3', 'option3'),
-                   ('Option 4', 'option4'),
-                   ('Option 5', 'option5'),
-                   ('Option 6', 'option6'),
-                   ('Option 7', 'option7'),
-                   ('Option 8', 'option8'),
-                   ('Option 9', 'option9')
-                 ],
-        'default': 4,
-        'scroll': 1,
-        'height': 5
-    },
-    {
-        '_name': 'window2',
-        '_widget': 'entry',
-        'title': 'Title 2',
-        'text': 'Text content 2',
-        'prompts': [ 'Prompt 1',
-                     'Prompt 2',
-                     'Prompt 3'
-                   ],
-        'width': 70
-    },
-    ('window99', get_window3),
-    ]
-
-The result of the panels.execute() call, above, after I pressed ENTER all of 
-the way through the first screen, and then entered three values on the second 
-screen before pressing the "Ok" button:
-
-    {'window1': [(None, 'option5')],
-     'window2': [('ok', ('', '', ''))],
-     'window99': [(None, 'option1'),
-                  (None, 'option1'),
-                  (None, 'option1'),
-                  (None, 'option1')]}
-    
-The second screen, as it appears to the user (this is in color):
-                                                                                               
-     ┌────────────────────────────┤ Title 2 ├────────────────────────────┐             
-     │                                                                   │             
-     │ Text content 2                                                    │             
-     │                                                                   │             
-     │                   Prompt 1 ____________________                   │             
-     │                   Prompt 2 ____________________                   │             
-     │                   Prompt 3 ____________________                   │             
-     │                                                                   │             
-     │             ┌────┐                        ┌────────┐              │             
-     │             │ Ok │                        │ Cancel │              │             
-     │             └────┘                        └────────┘              │             
-     │                                                                   │             
-     │                                                                   │             
-     └───────────────────────────────────────────────────────────────────┘             
-                                                                                               
-  <Tab>/<Alt-Tab> between elements   |  <Space> selects   |  <F12> next screen                 
-
-As this is just a wrapper around the basic Snack functionality for the purpose 
-of interfacing with a configuration file, and most of the values in the form 
-expressions are sent directly as arguments to Snack, you may see the full array 
-of properties for each expression by looking in the main snack.py file (in the 
-required package, mentioned above).
+{'validation_error': {'button': 'ok',
+                      'grid': <snack.GridFormHelp instance at 0xb6f7222c>,
+                      'is_esc': False},
+ 'window1': {'button': None,
+             'grid': <snack.GridFormHelp instance at 0xb6f73b4c>,
+             'is_esc': False,
+             'selected': 'option5'},
+ 'window2': {'button': 'ok',
+             'grid': <snack.GridFormHelp instance at 0xb6f7234c>,
+             'is_esc': False,
+             'values': ('test value', '', '')},
+ 'window3': {'button': None,
+             'grid': <snack.GridFormHelp instance at 0xb6f7296c>,
+             'is_esc': False,
+             'selected': 'option1'}}
 
