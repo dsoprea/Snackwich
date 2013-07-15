@@ -16,6 +16,7 @@ from snackwich.exceptions import GotoPanelException, \
                                  RedrawException, \
                                  QuitAndExecuteException, \
                                  PostQuitAndExecuteException
+from snackwich.buttons import BTN_CANCEL
 
 class _PanelContainer(object):
     __config  = None
@@ -507,7 +508,7 @@ class Snackwich(object):
                                 len(expression['buttons']) > 1:
                             if 'is_esc' in result and result['is_esc'] or \
                                'button' in result and \
-                                    result['button'] == 'cancel':
+                                    result['button'] == BTN_CANCEL[1]:
                                 break
 
                     if 'collect_results' in meta_attributes and \

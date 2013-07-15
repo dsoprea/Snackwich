@@ -1,8 +1,11 @@
 """A utility function."""
 
+import types
+
 from snack import ButtonBar, TextboxReflowed, Listbox, GridFormHelp, Scale, \
                   Checkbox
-import types
+
+from snackwich.buttons import BTN_OK, BTN_CANCEL
 
 # Show the dialog, wait for input or timeout, pop, and redraw screen.
 RT_EXECUTEANDPOP = 1
@@ -39,7 +42,7 @@ def ProgressWindow(screen, title, text, progress, max_progress=100, width=40,
     g.add(scale, 0, 1, padding = (0, 1, 0, 1))
 
     if show_cancel:
-        bb = ButtonBar(screen, ['Cancel'])
+        bb = ButtonBar(screen, [BTN_CANCEL[0]])
         g.add(bb, 0, 2, growx = 1)
 
     if timer_ms:
@@ -101,12 +104,11 @@ def ActivateWindow(g, run_type, button_bar=None, x=None, y=None):
 def ManualPop(screen, refresh=True):
     screen.popWindow(refresh)
 
-def CheckboxListWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'), 
-                       width=40, scroll=0, default=None, help=None, 
-                       timer_ms=None, secondary_message=None, 
-                       secondary_message_width=None, 
-                       run_type=RT_EXECUTEANDPOP,
-                       default_check_state=False,
+def CheckboxListWindow(screen, title, text, items, 
+                       buttons=(BTN_OK[0], BTN_CANCEL[0]), width=40, scroll=0, 
+                       default=None, help=None, timer_ms=None, 
+                       secondary_message=None, secondary_message_width=None, 
+                       run_type=RT_EXECUTEANDPOP, default_check_state=False,
                        default_check_states=None):
 
     if not default_check_states:
