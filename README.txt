@@ -10,26 +10,22 @@ requisite dynamic library.
 
 See the "test.py" script in the example/ directory.
 
-                    ┌─────────────┤ Title 1 ├─────────────┐                                                  
-                    │                                     │                                                  
-                    │ Text content 1                      │                                                  
-                    │                                     │                                                  
-                    │             Option 1  ↑             │                                                  
-                    │             Option 2  ▒             │                                                  
-                    │             Option 3  ▮             │                                                  
-                    │             Option 4  ▒             │                                                  
-                    │             Option 5  ↓             │                                                  
-                    │                                     │                                                  
-                    │     ┌────┐          ┌────────┐      │                                                  
-                    │     │ Ok │          │ Cancel │      │                                                  
-                    │     └────┘          └────────┘      │                                                  
-                    │                                     │                                                  
-                    │                                     │                                                  
-                    └─────────────────────────────────────┘                                                  
-                                                                                                                                           
-                                                                                                                                           
-  <Tab>/<Alt-Tab> between elements   |  <Space> selects   |  <F12> next screen                                                             
-
+┌─────────────┤ Title 1 ├─────────────┐
+│                                     │
+│ Text content 1                      │
+│                                     │
+│             Option 1  ↑             │
+│             Option 2  ▒             │
+│             Option 3                │
+│             Option 4  ▒             │
+│             Option 5  ↓             │
+│                                     │
+│     ┌────┐          ┌────────┐      │
+│     │ Ok │          │ Cancel │      │
+│     └────┘          └────────┘      │
+│                                     │
+│                                     │
+└─────────────────────────────────────┘
 
 Snackwich allows you to express your panels declaratively (as a static list-of-
 dictionaries), a list of tuples describing callbacks, or a combination of both.
