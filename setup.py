@@ -18,16 +18,17 @@ def pre_install():
 if not pre_install():
     sys.exit(1)
 
-version = '1.3.16'
+version = '1.3.18'
 
 setup(name='snackwich',
       version=version,
       description="Configuration-based console UI forms.",
       long_description="Configuration-based Snack/Newt adaptation for easy and attractive console UI forms.",
-      classifiers=['Development Status :: 3 - Alpha',
-                   'License :: OSI Approved :: BSD License',
+      classifiers=['Development Status :: 5 - Production/Stable',
+                   'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
                    'Natural Language :: English',
                    'Programming Language :: Python :: 2.7',
+                   'Programming Language :: Python :: 3.0',
                    'Topic :: Software Development :: Libraries :: Python Modules',
                    'Environment :: Console :: Newt'
                   ],

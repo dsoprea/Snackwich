@@ -151,7 +151,7 @@ def EntryWindow(screen, title, text, prompts, allowCancel=1, width=40,
     for n in prompts:
         if (type(n) == tuple):
             (n, e) = n
-            if (type(e) in str):
+            if issubclass(e.__class__, str):
                 e = Entry(entryWidth, e)
         else:
             e = Entry(entryWidth)
