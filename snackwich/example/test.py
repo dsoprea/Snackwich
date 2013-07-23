@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+from sys import path
+path.insert(0, '.')
+
 from sys import exit
 
 from snackwich.main import Snackwich

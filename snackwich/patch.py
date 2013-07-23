@@ -1,7 +1,5 @@
 """Adjusted versions of the original functions."""
 
-import types
-
 from snack import ButtonBar, TextboxReflowed, Listbox, GridFormHelp, Grid, \
                   Entry, Label
 
@@ -34,7 +32,7 @@ def ListboxChoiceWindow(screen, title, text, items, buttons = ('Ok', 'Cancel'),
     l = Listbox(height, scroll = scroll, returnExit = 1)
     count = 0
     for item in items:
-        if (type(item) == types.TupleType):
+        if (type(item) == tuple):
             (text, key) = item
         else:
             text = item
@@ -151,9 +149,9 @@ def EntryWindow(screen, title, text, prompts, allowCancel=1, width=40,
     count = 0
     entryList = []
     for n in prompts:
-        if (type(n) == types.TupleType):
+        if (type(n) == tuple):
             (n, e) = n
-            if (type(e) in types.StringTypes):
+            if (type(e) in str):
                 e = Entry(entryWidth, e)
         else:
             e = Entry(entryWidth)
