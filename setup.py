@@ -36,12 +36,11 @@ setup(name='snackwich',
       author='Dustin Oprea',
       author_email='myselfasunder@gmail.com',
       url='https://github.com/dsoprea/Snackwich',
-      license='New BSD',
+      license='GPL2',
       packages=['snackwich'],
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          'setuptools'
       ],
       entry_points="""
       # -*- Entry points: -*-
